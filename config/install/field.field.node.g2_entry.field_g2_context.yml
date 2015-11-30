@@ -1,0 +1,27 @@
+uuid: 1e4f1e58-0d43-4b08-8202-2d5c3add0117
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_g2_context
+    - node.type.g2_entry
+    - taxonomy.vocabulary.thesaurus
+id: node.g2_entry.field_g2_context
+field_name: field_g2_context
+entity_type: node
+bundle: g2_entry
+label: 'G2 Context'
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      thesaurus: thesaurus
+    sort:
+      field: _none
+    auto_create: false
+field_type: entity_reference

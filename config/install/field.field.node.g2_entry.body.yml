@@ -1,0 +1,22 @@
+uuid: 8ec446fb-5edd-4305-9637-55628dcc35d7
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.node.body
+    - node.type.g2_entry
+  module:
+    - text
+id: node.g2_entry.body
+field_name: body
+entity_type: node
+bundle: g2_entry
+label: Body
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  display_summary: true
+field_type: text_with_summary

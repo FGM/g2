@@ -1,0 +1,20 @@
+uuid: fc175064-6b2e-4318-b14c-76ef65e9b3d2
+langcode: fr
+status: true
+dependencies:
+  module:
+    - node
+    - taxonomy
+id: node.field_g2_context
+field_name: field_g2_context
+entity_type: node
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,37 @@
+uuid: 703c756e-028f-403e-8000-a3d3c0c5083f
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.g2_entry.body
+    - field.field.node.g2_entry.field_g2_context
+    - field.field.node.g2_entry.field_g2_expansion
+    - node.type.g2_entry
+  module:
+    - user
+id: node.g2_entry.teaser
+targetEntityType: node
+bundle: g2_entry
+mode: teaser
+content:
+  field_g2_context:
+    weight: 2
+    label: hidden
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+  field_g2_expansion:
+    weight: 1
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+  links:
+    weight: 0
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  body: true

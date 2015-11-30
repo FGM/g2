@@ -1,0 +1,44 @@
+uuid: e20f2767-99b6-475c-8200-cacfbd4341e6
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.g2_wotd
+    - field.field.node.g2_entry.body
+    - field.field.node.g2_entry.field_g2_context
+    - field.field.node.g2_entry.field_g2_expansion
+    - node.type.g2_entry
+  module:
+    - text
+    - user
+id: node.g2_entry.g2_wotd
+targetEntityType: node
+bundle: g2_entry
+mode: g2_wotd
+content:
+  body:
+    weight: 2
+    label: above
+    settings:
+      trim_length: 600
+    third_party_settings: {  }
+    type: text_summary_or_trimmed
+  field_g2_context:
+    weight: 0
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+  field_g2_expansion:
+    weight: 1
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+  links:
+    weight: 3
+    settings: {  }
+    third_party_settings: {  }
+hidden: {  }

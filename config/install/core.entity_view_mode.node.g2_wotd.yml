@@ -1,0 +1,10 @@
+uuid: 9e24055c-a8a5-49c3-9652-82f3ab04eb67
+langcode: fr
+status: true
+dependencies:
+  module:
+    - node
+id: node.g2_wotd
+label: 'G2 WOTD'
+targetEntityType: node
+cache: true

@@ -1,0 +1,35 @@
+uuid: 8f607dc1-13e9-4f5f-9000-cbe3ea3a96f4
+langcode: fr
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.g2_homonyms_page
+    - field.field.node.page.body
+    - field.field.node.page.field_g2_context
+    - node.type.page
+  module:
+    - text
+    - user
+id: node.page.g2_homonyms_page
+targetEntityType: node
+bundle: page
+mode: g2_homonyms_page
+content:
+  body:
+    label: hidden
+    type: text_default
+    weight: 101
+    settings: {  }
+    third_party_settings: {  }
+  field_g2_context:
+    weight: 102
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+hidden: {  }
