@@ -48,15 +48,19 @@ slashes or ampersands without specific markup.
 It has been designed to handle glossaries with many thousands of nodes without
 slowing or increasing its memory requirements significantly.
 
-Its development to this date has been entirely sponsored by OSInet.fr
+Its development to this date has been entirely sponsored by [OSInet]. 
+
+[OSInet]: http://www.osinet.fr/
 
 
 * Project page on Drupal.org: http://drupal.org/project/g2
-* Documentation wiki (contributions welcome) http://wiki.audean.com/g2/start
-* Sample implementation (about 6000 terms, localized to french) http://www.riff.org/glossaire
+* Documentation wiki (contributions welcome): http://wiki.audean.com/g2/start
+* Sample implementation (about 6000 terms, localized to french): http://www.riff.org/glossaire
 
 
 2. Completion status
+--------------------
+
 ### Main features
 
 | Blocks    | Service     | API       | Block / controller  |
@@ -66,7 +70,7 @@ Its development to this date has been entirely sponsored by OSInet.fr
 | Latest    | Working     | Working   | Working             |
 | Random    |             |           |                     |
 | Top       | Working     | Working   | Working             |
-| WOTD      |             |           |                     |
+| WOTD      | Working, no auto-change | Working   | Working             |
 
 * 'Done' status means working and with high test coverage
 * 'Working' status means appears to work but not (completely) tested

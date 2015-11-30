@@ -7,6 +7,8 @@
 
 namespace Drupal\g2\Form;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\Entity\EntityViewMode;
+use Drupal\Core\Entity\EntityViewModeInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -180,29 +182,28 @@ class SettingsForm extends ConfigFormBase {
       '#min' => 1,
     ];
 
-    $element = &$form[$section]['wotd'];
-    $element['auto_change'] = [
-      '#type' => 'checkbox',
-      '#title' => $schema['wotd']['mapping']['auto_change']['label'],
-      '#default_value' => $config['wotd']['auto_change'],
-    ];
-    $element['body_size'] = [
-      '#type' => 'number',
-      '#title' => $schema['wotd']['mapping']['body_size']['label'],
-      '#default_value' => $config['wotd']['body_size'],
-    ];
-    $element['links'] = [
-      '#type' => 'details',
-      '#open' => TRUE,
-      '#title' => $schema['wotd']['mapping']['links']['label'],
-    ];
-    foreach ($config['wotd']['links'] as $name => $value) {
-      $element['links'][$name] = [
-        '#type' => 'checkbox',
-        '#title' => $schema['wotd']['mapping']['links']['mapping'][$name]['label'],
-        '#default_value' => $value,
-      ];
+    $modes = EntityViewMode::loadMultiple();
+    $mode_options = [];
+    /* @var EntityViewModeInterface $mode */
+    foreach ($modes as $id => $mode) {
+      if ('node' === $mode->getTargetType()) {
+        // Strlen('node.') === 5.
+        $id = substr($id, 5);
+        $mode_options[$id] = $mode->label();
+      }
     }
+    $element = &$form[$section]['wotd'];
+    $element['view_mode'] = [
+      '#type' => 'select',
+      '#title' => $schema['wotd']['mapping']['view_mode']['label'],
+      '#default_value' => $config['wotd']['view_mode'],
+      '#options' => $mode_options,
+    ];
+    $element['feed'] = [
+      '#type' => 'checkbox',
+      '#title' => $schema['wotd']['mapping']['feed']['label'],
+      '#default_value' => $config['wotd']['feed'],
+    ];
 
     return $form;
   }
@@ -442,6 +443,14 @@ class SettingsForm extends ConfigFormBase {
         '#default_value' => $config[$service]['max_count'],
       ];
     }
+
+    $element = &$form[$section]['wotd'];
+    $element['auto_change'] = [
+      '#type' => 'checkbox',
+      '#title' => $schema['wotd']['mapping']['auto_change']['label'],
+      '#default_value' => $config['wotd']['auto_change'],
+    ];
+
     return $form;
   }
 

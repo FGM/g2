@@ -9,13 +9,8 @@ block:
   top:
     count: 10
   wotd:
-    auto_change: true
-    body_size: 40
-    links:
-      feed: true
-      node: true
-      terms: true
-    show_terms: false
+    view_mode: g2_wotd
+    feed: true
 controller:
   main:
     nid: 0
@@ -56,3 +51,5 @@ service:
     max_count: 100
   top:
     max_count: 100
+  wotd:
+    auto_change: true

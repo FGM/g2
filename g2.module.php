@@ -124,6 +124,23 @@ function _g2_top($count = NULL, $daily_top = FALSE) {
 }
 
 /**
+ * Returns a structure for the WOTD.
+ *
+ * @return \Drupal\node\NodeInterface|null
+ *   Teaser and Body are returned already filtered, not stripped.
+ */
+function _g2_wotd() {
+  /* @var \Drupal\g2\Wotd $wotd_service */
+  $wotd_service = \Drupal::service('g2.wotd');
+  $node = $wotd_service->getEntry();
+
+  /* @var \Symfony\Component\Serializer\Serializer $serializer */
+  $serializer = \Drupal::service('serializer');
+  $result = $serializer->serialize($node, 'json');
+  return $result;
+}
+
+/**
  * Implement hook_help()
  */
 function g2_help($route_name, RouteMatchInterface $route_match) {
@@ -201,7 +218,6 @@ function g2_theme() {
 
     // --- Older versions ------------------------------------------------------
     'g2_random' => ['variables' => ['node' => NULL]],
-    'g2_wotd' => ['variables' => ['node' => NULL]],
 
     'g2_body' => ['variables' => ['title' => '', 'body' => '']],
     'g2_period' => ['variables' => ['title' => '', 'period' => '']],
@@ -564,41 +580,6 @@ function _g2_referer_wipe($nid = NULL) {
 }
 
 /**
- * Returns a structure for the WOTD.
- *
- * @param int $bodysize
- *
- * @return object title / nid / teaser
- *   Teaser and Body are returned already filtered, not stripped.
- */
-function _g2_wotd($bodysize = 0) {
-  // No need for a static: this function is normally never called twice.
-  $nid = variable_get(G2VARWOTDENTRY, G2DEFWOTDENTRY);
-  $node = node_load($nid);
-  if (empty($node)) {
-    return NULL;
-  }
-
-  if (variable_get(G2VARWOTDTERMS, G2DEFWOTDTERMS)) {
-    $node->taxonomy = _g2_comb_taxonomy(taxonomy_node_get_terms($node));
-  }
-
-  $node->teaser = check_markup($node->teaser, $node->format);
-
-  $node->truncated = FALSE;
-  if ($bodysize > 0) {
-    $node->raw_body = $node->body; // save the raw version
-    if (drupal_strlen($node->body) > $bodysize) {
-      $node->truncated = TRUE;
-      $body = drupal_substr($node->body, 0, $bodysize);
-      $node->body = check_markup($body, $node->format);
-    }
-  }
-
-  return $node;
-}
-
-/**
  * Generate an RSS feed containing the latest WOTD.
  *
  * @return string XML in UTF-8 encoding
@@ -705,45 +686,10 @@ function g2_block($op = 'list', $delta = 0, $edit = []) {
             '@nid' => $nid,
           ]),
         ];
-        $form[G2VARWOTDBODYSIZE] = [
-          '#type' => 'textfield',
-          '#title' => t('Number of text characters to be displayed from entry definition body, if one exists'),
-          '#size' => 4,
-          '#maxlength' => 4,
-          '#required' => TRUE,
-          '#default_value' => variable_get(G2VARWOTDBODYSIZE, G2DEFWOTDBODYSIZE),
-        ];
-        $form[G2VARWOTDAUTOCHANGE] = [
-          '#type' => 'checkbox',
-          '#title' => t('Auto-change daily'),
-          '#required' => TRUE,
-          '#default_value' => variable_get(G2VARWOTDAUTOCHANGE, G2DEFWOTDAUTOCHANGE),
-          '#description' => t('This setting will only work if cron or poormanscron is used.'),
-        ];
-        $form[G2VARWOTDTERMS] = [
-          '#type' => 'checkbox',
-          '#title' => t('Return taxonomy terms for the current entry'),
-          '#default_value' => variable_get(G2VARWOTDTERMS, G2DEFWOTDTERMS),
-          '#description' => t('The taxonomy terms will be returned by XML-RPC and made available to the theme.
-           Default G2 themeing will display them.'),
-        ];
-        $form[G2VARWOTDTITLE] = [
-          '#type' => 'textfield',
-          '#title' => t('Title for the WOTD block'),
-          '#description' => t('This title is also the default title for the WOTD feed, if none is defined. It is overridden by the default Drupal block title, if the latter is not empty.'),
-          '#required' => TRUE,
-          '#default_value' => variable_get(G2VARWOTDTITLE, G2DEFWOTDTITLE),
-        ];
 
         $form['wotd_feed'] = [
           '#type' => 'fieldset',
           '#title' => t('RSS Feed'),
-        ];
-        $form['wotd_feed'][G2VARWOTDFEEDLINK] = [
-          '#type' => 'checkbox',
-          '#title' => t('Display feed link'),
-          '#default_value' => variable_get(G2VARWOTDFEEDLINK, G2DEFWOTDFEEDLINK),
-          '#description' => t('Should the theme display the link to the RSS feed for this block ?'),
         ];
         $form['wotd_feed'][G2VARWOTDFEEDTITLE] = [
           '#type' => 'textfield',
@@ -792,25 +738,6 @@ function g2_block($op = 'list', $delta = 0, $edit = []) {
         variable_set(G2VARRANDOMTERMS, $edit[G2VARRANDOMTERMS]);
         break;
 
-      case G2::DELTA_WOTD:
-        // Convert "some title [<nid>, sticky]" to nid
-        $entry = $edit[G2VARWOTDENTRY];
-        $matches = [];
-        $count = preg_match('/.*\[(\d*).*\]$/', $entry, $matches);
-        $nid = $count ? $matches[1] : 0;
-
-        variable_set(G2VARWOTDENTRY, $nid);
-        variable_set(G2VARWOTDBODYSIZE, $edit[G2VARWOTDBODYSIZE]);
-        variable_set(G2VARWOTDAUTOCHANGE, $edit[G2VARWOTDAUTOCHANGE]);
-        variable_set(G2VARWOTDDATE, mktime());
-        variable_set(G2VARWOTDTERMS, $edit[G2VARWOTDTERMS]);
-        variable_set(G2VARWOTDFEEDLINK, $edit[G2VARWOTDFEEDLINK]);
-        variable_set(G2VARWOTDFEEDTITLE, $edit[G2VARWOTDFEEDTITLE]);
-        variable_set(G2VARWOTDFEEDDESCR, $edit[G2VARWOTDFEEDDESCR]);
-        variable_set(G2VARWOTDFEEDAUTHOR, $edit[G2VARWOTDFEEDAUTHOR]);
-        variable_set(G2VARWOTDTITLE, $edit[G2VARWOTDTITLE]);
-        break;
-
       default:
         break;
     }
@@ -821,11 +748,6 @@ function g2_block($op = 'list', $delta = 0, $edit = []) {
       case G2::DELTA_RANDOM:
         $block['subject'] = t('Random G2 glossary entry');
         $block['content'] = theme('g2_random', _g2_random());
-        break;
-
-      case G2::DELTA_WOTD:
-        $block['subject'] = variable_get(G2VARWOTDTITLE, G2DEFWOTDTITLE);
-        $block['content'] = theme('g2_wotd', _g2_wotd(variable_get(G2VARWOTDBODYSIZE, G2DEFWOTDBODYSIZE)));
         break;
 
       // Should happen only when using a new code version on an older schema
@@ -1511,52 +1433,6 @@ function theme_g2_teaser($title, $teaser) {
 }
 
 /**
- * Theme a WOTD block.
- *
- * @param \Drupal\node\Entity\Node|null $node
- *   The node for the word of the day. teaser and body are already filtered and
- *   truncated if needed.
- *
- * @return string title / nid / teaser / [body]
- */
-function theme_g2_wotd(Node $node = NULL) {
-  if (empty($node)) {
-    return NULL;
-  }
-
-  $link = l($node->title, 'node/' . $node->nid); // l() check_plain's text
-  if (isset($node->teaser) and !empty($node->teaser)) {
-    // Teaser already filtered by _g2_wotd(), don't filter twice.
-    $teaser = '<span id="g2_wotd_teaser">' . strip_tags($node->teaser) . '</span>';
-    $ret = t('!link: !teaser', [
-      '!link' => $link,
-      '!teaser' => $teaser,
-    ]);
-    unset($teaser);
-  }
-  else {
-    $ret = $link;
-  }
-
-  if (!empty($node->body)) {
-    // Already filtered by _g2_wotd(), don't filter twice, just strip.
-    $body = strip_tags($node->body);
-    if ($node->truncated) {
-      $body .= '&hellip;';
-    }
-    $ret .= '<div id="g2_wotd_body">' . $body . '</div>';
-  }
-  $node->taxonomy = _g2_comb_taxonomy($node->taxonomy);
-  $ret .= _g2_entry_terms($node); // No need to test: it won't change anything if a taxonomy has not been returned
-  $ret .= theme('more_link', url('node/' . $node->nid), t('&nbsp;(+)'));
-  if (variable_get(G2VARWOTDFEEDLINK, G2DEFWOTDFEEDLINK)) {
-    $ret .= theme('feed_icon', url(G2PATHWOTDFEED, ['absolute' => TRUE]),
-      t('A word a day in your RSS reader'));
-  }
-  return $ret;
-}
-
-/**
  * Implements hook_block_configure().
  */
 function Zg2_block_configure($delta) {
@@ -1593,8 +1469,8 @@ function Zg2_block_configure($delta) {
       ];
       break;
 
-    case G2\DELTATOP:
-      $form[G2\VARTOPITEMCOUNT] = [
+    case G2::DELTA_TOP:
+      $form[G2::VARTOPITEMCOUNT] = [
         '#type' => 'select',
         '#title' => t('Number of items'),
         '#default_value' => variable_get(G2\VARTOPITEMCOUNT, G2\DEFTOPITEMCOUNT),
@@ -1602,61 +1478,7 @@ function Zg2_block_configure($delta) {
       ];
       break;
 
-    case G2\DELTAWOTD:
-      // Convert nid to "title [<nid>]" even if missing.
-      // @see autocomplete()
-      $nid = variable_get(G2\VARWOTDENTRY, G2\DEFWOTDENTRY);
-      $node = node_load($nid);
-      if (empty($node)) {
-        $node = new stdClass();
-        $node->nid = 0;
-        $node->title = NULL;
-      }
-      $form[G2\VARWOTDENTRY] = [
-        '#type' => 'textfield',
-        '#title' => t('Entry for the day'),
-        '#maxlength' => 60,
-        '#autocomplete_path' => G2\PATHAUTOCOMPLETE,
-        '#required' => TRUE,
-        // !title: we don't filter since this is input, not output,
-        // and can contain normally escaped characters, to accommodate
-        // entries like "<", "C#" or "AT&T"
-        '#default_value' => t('!title [@nid]', [
-          '!title' => $node->title,
-          '@nid' => $nid,
-        ]),
-      ];
-      $form[G2\VARWOTDBODYSIZE] = [
-        '#type' => 'textfield',
-        '#title' => t('Number of text characters to be displayed from entry definition body, if one exists'),
-        '#size' => 4,
-        '#maxlength' => 4,
-        '#required' => TRUE,
-        '#default_value' => variable_get(G2\VARWOTDBODYSIZE, G2\DEFWOTDBODYSIZE),
-      ];
-      $form[G2\VARWOTDAUTOCHANGE] = [
-        '#type' => 'checkbox',
-        '#title' => t('Auto-change daily'),
-        '#required' => TRUE,
-        '#default_value' => variable_get(G2\VARWOTDAUTOCHANGE, G2\DEFWOTDAUTOCHANGE),
-        '#description' => t('This setting will only work if cron or poormanscron is used.'),
-      ];
-      $form[G2\VARWOTDTERMS] = [
-        '#type' => 'checkbox',
-        '#title' => t('Return taxonomy terms for the current entry'),
-        '#default_value' => variable_get(G2\VARWOTDTERMS, G2\DEFWOTDTERMS),
-        '#description' => t('The taxonomy terms will be returned by XML-RPC and made available to the theme.
-         Default G2 themeing will display them.'),
-      ];
-      $default_wotd_title = t('Word of the day in the G2 glossary');
-      $form[G2\VARWOTDTITLE] = [
-        '#type' => 'textfield',
-        '#title' => t('Title for the WOTD block'),
-        '#description' => t('This title is also the default title for the WOTD feed, if none is defined. It is overridden by the default Drupal block title, if the latter is not empty.'),
-        '#required' => TRUE,
-        '#default_value' => variable_get(G2\VARWOTDTITLE, $default_wotd_title),
-      ];
-
+    case G2::DELTA_WOTD:
       $form['wotd_feed'] = [
         '#type' => 'fieldset',
         '#title' => t('RSS Feed'),
@@ -1713,15 +1535,9 @@ function Zg2_block_configure($delta) {
 function Zg2_block_info() {
   $blocks = [];
   $blocks[G2\DELTARANDOM]['info'] = variable_get('g2_random_info', t('G2 Random'));
-  $blocks[G2\DELTATOP]['info'] = variable_get('g2_top_info', t('G2 Top'));
-  $blocks[G2\DELTAWOTD]['info'] = variable_get('g2_wotd_info', t('G2 Word of the day'));
 
   // Else it couldn't be random.
   $blocks[G2\DELTARANDOM]['cache'] = DRUPAL_NO_CACHE;
-  // Can contain unpublished nodes.
-  $blocks[G2\DELTATOP]['cache'] = DRUPAL_CACHE_PER_ROLE;
-  // Not all roles have g2 view permission.
-  $blocks[G2\DELTAWOTD]['cache'] = DRUPAL_CACHE_PER_ROLE;
   return $blocks;
 }
 
@@ -1733,29 +1549,6 @@ function Zg2_block_save($delta, $edit) {
     case G2\DELTARANDOM:
       variable_set(G2\VARRANDOMSTORE, $edit[G2\VARRANDOMSTORE]);
       variable_set(G2\VARRANDOMTERMS, $edit[G2\VARRANDOMTERMS]);
-      break;
-
-    case G2\DELTATOP:
-      variable_set(G2\VARTOPITEMCOUNT, $edit[G2\VARTOPITEMCOUNT]);
-      break;
-
-    case G2\DELTAWOTD:
-      // Convert "some title [<nid>, sticky]" to nid.
-      $entry = $edit[G2\VARWOTDENTRY];
-      $matches = [];
-      $count = preg_match('/.*\[(\d*).*\]$/', $entry, $matches);
-      $nid = $count ? $matches[1] : 0;
-
-      variable_set(G2\VARWOTDENTRY, $nid);
-      variable_set(G2\VARWOTDBODYSIZE, $edit[G2\VARWOTDBODYSIZE]);
-      variable_set(G2\VARWOTDAUTOCHANGE, $edit[G2\VARWOTDAUTOCHANGE]);
-      variable_set(G2\VARWOTDDATE, REQUEST_TIME);
-      variable_set(G2\VARWOTDTERMS, $edit[G2\VARWOTDTERMS]);
-      variable_set(G2\VARWOTDFEEDLINK, $edit[G2\VARWOTDFEEDLINK]);
-      variable_set(G2\VARWOTDFEEDTITLE, $edit[G2\VARWOTDFEEDTITLE]);
-      variable_set(G2\VARWOTDFEEDDESCR, $edit[G2\VARWOTDFEEDDESCR]);
-      variable_set(G2\VARWOTDFEEDAUTHOR, $edit[G2\VARWOTDFEEDAUTHOR]);
-      variable_set(G2\VARWOTDTITLE, $edit[G2\VARWOTDTITLE]);
       break;
 
     default:
@@ -1772,18 +1565,6 @@ function Zg2_block_view($delta) {
     case G2\DELTARANDOM:
       $block['subject'] = t('Random G2 glossary entry');
       $block['content'] = theme('g2_random', ['node' => G2\random()]);
-      break;
-
-    case G2\DELTATOP:
-      $max = variable_get(G2\VARTOPITEMCOUNT, G2\DEFTOPITEMCOUNT);
-      $block['subject'] = t('@count most popular G2 glossary entries',
-        ['@count' => $max]);
-      $block['content'] = theme('g2_node_list', ['nodes' => G2\top($max, FALSE, TRUE)]);
-      break;
-
-    case G2\DELTAWOTD:
-      $block['subject'] = variable_get(G2\VARWOTDTITLE, t('Word of the day in the G2 glossary'));
-      $block['content'] = theme('g2_wotd', ['node' => G2\wotd(variable_get(G2\VARWOTDBODYSIZE, G2\DEFWOTDBODYSIZE))]);
       break;
 
     // Should happen only when using a new code version on an older schema
@@ -2407,70 +2188,5 @@ function Ztheme_g2_random($variables) {
       'title' => t('&nbsp;(+)'),
     ]
   );
-  return $ret;
-}
-
-/**
- * Theme a WOTD block.
- *
- * TODO 20110122: replace with just a node rendered with a specific view_mode
- *
- * @param object $variables
- *   The node for the word of the day. teaser and body are already filtered and
- *   truncated if needed.
- *
- * @return null|string
- *   title / nid / teaser / [body]
- */
-function Ztheme_g2_wotd($variables) {
-  $node = $variables['node'];
-  if (empty($node)) {
-    return NULL;
-  }
-  $uri = entity_uri('node', $node);
-
-  $link = l($node->title, $uri['path'], $uri['options']);
-  if (isset($node->expansion) and !empty($node->expansion)) {
-    // Teaser already filtered by G2\wotd(), don't filter twice.
-    // TODO 20110122 make sure this is true.
-    $teaser = '<span id="g2_wotd_expansion">' . strip_tags($node->expansion) . '</span>';
-    $ret = t('!link: !teaser', [
-      '!link' => $link,
-      '!teaser' => $teaser,
-    ]);
-    unset($teaser);
-  }
-  else {
-    $ret = $link;
-  }
-
-// No longer needed: use a view_mode instead
-  /*
-    if (!empty($node->body)) {
-    // already filtered by G2\wotd(), don't filter twice, just strip.
-    $body = strip_tags($node->body);
-    if ($node->truncated) {
-      $body .= '&hellip;';
-    }
-    $ret .= '<div id="g2_wotd_body">' . $body . '</div>';
-  }
-  */
-
-  // No need to test: it won't change anything unless taxonomy has been returned
-  // $ret .= G2\entry_terms($node);
-  $ret .= theme('more_link', [
-      'url' => $uri['path'],
-      // TODO check evolution of http://drupal.org/node/1036190
-      'options' => $uri['options'],
-      'title' => t('&nbsp;(+)'),
-    ]
-  );
-  if (variable_get(G2\VARWOTDFEEDLINK, G2\DEFWOTDFEEDLINK)) {
-    $ret .= theme('feed_icon', [
-      'url' => url(G2\PATHWOTDFEED, ['absolute' => TRUE]),
-      // TODO: find a better title.
-      'title' => t('Glossary feed'),
-    ]);
-  }
   return $ret;
 }

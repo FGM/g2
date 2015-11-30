@@ -43,28 +43,12 @@ g2.settings:
           label: 'Word of the day'
           type: mapping
           mapping:
-            auto_change:
+            view_mode:
+              type: string
+              label: 'The view mode used to display the WOTD in the block.'
+            feed:
               type: boolean
-              label: 'Automatically change the WOTD every day ?'
-            body_size:
-              type: integer
-              label: 'Size of body summary included in WOTD block.'
-            links:
-              type: mapping
-              label: 'Links included in the WOTD block'
-              mapping:
-                feed:
-                  type: boolean
-                  label: 'Link to the WOTD feed'
-                node:
-                  type: boolean
-                  label: 'Link to the WOTD node'
-                terms:
-                  type: boolean
-                  label: 'Link to the term feeds, if show_terms is true. Ignored otherwise.'
-            show_terms:
-              type: boolean
-              label: 'Show terms on WOTD node'
+              label: 'Include a link to the WOTD feed.'
     service:
       type: mapping
       label: 'Services'
@@ -90,6 +74,13 @@ g2.settings:
             max_count:
               type: integer
               label: 'Maximum number of entries in top(n) list.'
+        wotd:
+          type: mapping
+          label: 'Word of the day'
+          mapping:
+            auto_change:
+              type: boolean
+              label: 'Automatically change the WOTD every day ?'
 
     controller:
       type: mapping

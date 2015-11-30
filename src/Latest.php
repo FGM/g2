@@ -9,7 +9,6 @@ namespace Drupal\g2;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
-use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Utility\LinkGenerator;
 use Drupal\node\Entity\Node;
@@ -43,13 +42,6 @@ class Latest {
   protected $entityQuery;
 
   /**
-   * The URL generator service.
-   *
-   * @var \Drupal\Core\Routing\UrlGeneratorInterface
-   */
-  protected $urlGenerator;
-
-  /**
    * Constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config
@@ -58,14 +50,11 @@ class Latest {
    *   The link generator service.
    * @param \Drupal\Core\Entity\Query\QueryFactory $entity_query
    *   The entity.query service.
-   * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
-   *   The URL generator service.
    */
   public function __construct(ConfigFactoryInterface $config, LinkGenerator $link_generator,
-    QueryFactory $entity_query, UrlGeneratorInterface $url_generator) {
+    QueryFactory $entity_query) {
     $this->linkGenerator = $link_generator;
     $this->entityQuery = $entity_query;
-    $this->urlGenerator = $url_generator;
 
     $g2_config = $config->get('g2.settings');
     $this->config = $g2_config->get('service.latest');

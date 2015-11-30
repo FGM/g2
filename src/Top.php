@@ -11,7 +11,6 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Utility\LinkGenerator;
 use Psr\Log\LoggerInterface;
@@ -71,13 +70,6 @@ class Top {
   protected $logger;
 
   /**
-   * The URL generator service.
-   *
-   * @var \Drupal\Core\Routing\UrlGeneratorInterface
-   */
-  protected $urlGenerator;
-
-  /**
    * Constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config
@@ -86,8 +78,6 @@ class Top {
    *   The link generator service.
    * @param \Drupal\Core\Entity\Query\QueryFactory $entity_query
    *   The entity.query service.
-   * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
-   *   The URL generator service.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module_handler service.
    * @param \Drupal\Core\Database\Connection $connection
@@ -96,14 +86,13 @@ class Top {
    *   The logger.channel.g2 service.
    */
   public function __construct(ConfigFactoryInterface $config, LinkGenerator $link_generator,
-    QueryFactory $entity_query, UrlGeneratorInterface $url_generator,
-    ModuleHandlerInterface $module_handler, Connection $connection, LoggerInterface $logger) {
+    QueryFactory $entity_query, ModuleHandlerInterface $module_handler, Connection $connection,
+    LoggerInterface $logger) {
     $this->available = $module_handler->moduleExists('statistics');
     $this->database = $connection;
     $this->entityQuery = $entity_query;
     $this->linkGenerator = $link_generator;
     $this->logger = $logger;
-    $this->urlGenerator = $url_generator;
 
     $g2_config = $config->get('g2.settings');
     $this->config = $g2_config->get('service.latest');

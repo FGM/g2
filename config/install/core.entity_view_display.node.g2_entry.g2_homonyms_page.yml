@@ -1,4 +1,4 @@
-status: false
+status: true
 dependencies:
   config:
     - core.entity_view_mode.node.g2_homonyms_page
